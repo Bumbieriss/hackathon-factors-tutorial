@@ -26,6 +26,9 @@ if [ "$USE_SOURCE_POS_FACTORS" = true ] ; then
     echo "Adding POS factors to source"
     SpacyTagger=( "en" "de" "fr" "pl" "da" "el" "nb" "nl" "pt" "ro" "it" "es" )
     if [[ " ${SpacyTagger[@]} " =~ " ${SRC_LANG} " ]] ; then
+        echo "Downloading models..."
+        python -m spacy download ${SRC_LANG}_core_news_sm
+        
         python $SCRIPTS/factorise-tok-data-with-spacy.py $SRC_LANG $DATA/$TRAIN_PREFIX.tok.$SRC_LANG > $DATA/$TRAIN_PREFIX.tok.pfact.$SRC_LANG  $POS_FACTOR_PREFIX
     else
         python $SCRIPTS/download_stanza_resources.py $SRC_LANG
@@ -39,6 +42,9 @@ if [ "$USE_TARGET_POS_FACTORS" = true ] ; then
     echo "Adding POS factors to target"
     SpacyTagger=( "en" "de" "fr" "pl" "da" "el" "nb" "nl" "pt" "ro" "it" "es" )
     if [[ " ${SpacyTagger[@]} " =~ " ${SRC_LANG} " ]] ; then
+        echo "Downloading models..."
+        python -m spacy download ${TGT_LANG}_core_news_sm
+        
         python $SCRIPTS/factorise-tok-data-with-spacy.py $TGT_LANG $DATA/$TRAIN_PREFIX.tok.$TGT_LANG > $DATA/$TRAIN_PREFIX.tok.pfact.$TGT_LANG  $POS_FACTOR_PREFIX
     else
         python $SCRIPTS/download_stanza_resources.py $TGT_LANG
