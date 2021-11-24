@@ -41,10 +41,14 @@ if [ "$USE_TARGET_POS_FACTORS" = true ] ; then
     sed -i $DATA/$TRAIN_PREFIX.tok.$TGT_LANG -e 's/|/¦/g'
     echo "Adding POS factors to target"
     SpacyTagger=( "en" "de" "fr" "pl" "da" "el" "nb" "nl" "pt" "ro" "it" "es" )
+<<<<<<< HEAD
     if [[ " ${SpacyTagger[@]} " =~ " ${SRC_LANG} " ]] ; then
         echo "Downloading models..."
         python -m spacy download ${TGT_LANG}_core_news_sm
         
+=======
+    if [[ " ${SpacyTagger[@]} " =~ " ${TGT_LANG} " ]] ; then
+>>>>>>> ccd33e2e1d57f6e8d50e9cdbf8e106a63807ce2c
         python $SCRIPTS/factorise-tok-data-with-spacy.py $TGT_LANG $DATA/$TRAIN_PREFIX.tok.$TGT_LANG > $DATA/$TRAIN_PREFIX.tok.pfact.$TGT_LANG  $POS_FACTOR_PREFIX
     else
         python $SCRIPTS/download_stanza_resources.py $TGT_LANG
