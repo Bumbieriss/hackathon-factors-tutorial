@@ -27,7 +27,12 @@ if [ "$USE_SOURCE_POS_FACTORS" = true ] ; then
     SpacyTagger=( "en" "de" "fr" "pl" "da" "el" "nb" "nl" "pt" "ro" "it" "es" )
     if [[ " ${SpacyTagger[@]} " =~ " ${SRC_LANG} " ]] ; then
         echo "Downloading models..."
-        python -m spacy download ${SRC_LANG}_core_news_sm
+        if [ "$SRC_LANG" = "en" ] ; 
+        then
+            python -m spacy download ${SRC_LANG}_core_web_sm
+        else
+            python -m spacy download ${SRC_LANG}_core_news_sm
+        fi
         
         python $SCRIPTS/factorise-tok-data-with-spacy.py $SRC_LANG $DATA/$TRAIN_PREFIX.tok.$SRC_LANG > $DATA/$TRAIN_PREFIX.tok.pfact.$SRC_LANG  $POS_FACTOR_PREFIX
     else
@@ -43,6 +48,12 @@ if [ "$USE_TARGET_POS_FACTORS" = true ] ; then
     SpacyTagger=( "en" "de" "fr" "pl" "da" "el" "nb" "nl" "pt" "ro" "it" "es" )
     if [[ " ${SpacyTagger[@]} " =~ " ${TGT_LANG} " ]] ; then
         echo "Downloading models..."
+        if [ "$TGT_LANG" = "en" ] ; 
+        then
+            python -m spacy download ${TGT_LANG}_core_web_sm
+        else
+            python -m spacy download ${TGT_LANG}_core_news_sm
+        fi
         python -m spacy download ${TGT_LANG}_core_news_sm
         python $SCRIPTS/factorise-tok-data-with-spacy.py $TGT_LANG $DATA/$TRAIN_PREFIX.tok.$TGT_LANG > $DATA/$TRAIN_PREFIX.tok.pfact.$TGT_LANG  $POS_FACTOR_PREFIX
     else
@@ -93,7 +104,7 @@ if [ "$USE_TARGET_LEMMAS" = true ] ; then
     cat $DATA/$TRAIN_PREFIX.tok.cfact.lemma.$TGT_LANG | sed -r "s/\|[^ ]+//g" > $DATA/$TRAIN_PREFIX.tok.nofact.lemma.$TGT_LANG
     TOK_TGT=$DATA/$TRAIN_PREFIX.tok.nofact.lemma.$TGT_LANG
     FACT_TGT=$DATA/$TRAIN_PREFIX.tok.cfact.lemma.$TGT_LANG
-elif [ "$USE_SOURCE_POS_FACTORS" = true ] ; then
+elif [ "$USE_TARGET_POS_FACTORS" = true ] ; then
     echo "Removing lemmas in target"
     python $SCRIPTS/remove_lemmas.py --input_file $FACT_TGT --output_file $DATA/$TRAIN_PREFIX.tok.cfact.nolemma.$TGT_LANG
     FACT_TGT=$DATA/$TRAIN_PREFIX.tok.cfact.nolemma.$TGT_LANG
@@ -109,17 +120,26 @@ echo "Applying BPE..."
 subword-nmt apply-bpe -c $DATA/$SRC_LANG$TGT_LANG.bpe --vocabulary $DATA/vocab.bpe.$SRC_LANG --vocabulary-threshold 50 < $TOK_SRC > $DATA/$TRAIN_PREFIX.tok.nofact.bpe.$SRC_LANG
 subword-nmt apply-bpe -c $DATA/$SRC_LANG$TGT_LANG.bpe --vocabulary $DATA/vocab.bpe.$TGT_LANG --vocabulary-threshold 50 < $TOK_TGT > $DATA/$TRAIN_PREFIX.tok.nofact.bpe.$TGT_LANG
 
+TRAIN_FACT_SRC=$DATA/$TRAIN_PREFIX.tok.nofact.bpe.$SRC_LANG
+TRAIN_FACT_TGT=$DATA/$TRAIN_PREFIX.tok.nofact.bpe.$TGT_LANG
 
 # Extend BPE splits to factored corpus
 echo "Applying BPE to factored corpus..."
-python $SCRIPTS/transfer_factors_to_bpe.py --factored_corpus $FACT_SRC --bpe_corpus $DATA/$TRAIN_PREFIX.tok.nofact.bpe.$SRC_LANG --output_file $DATA/$TRAIN_PREFIX.tok.cfact.bpe.$SRC_LANG
-python $SCRIPTS/transfer_factors_to_bpe.py --factored_corpus $FACT_TGT --bpe_corpus $DATA/$TRAIN_PREFIX.tok.nofact.bpe.$TGT_LANG --output_file $DATA/$TRAIN_PREFIX.tok.cfact.bpe.$TGT_LANG
+if [ "$USE_SOURCE_POS_FACTORS" = true ] || [ "$USE_SOURCE_CAP_FACTORS" = true ] ; then
+    python $SCRIPTS/transfer_factors_to_bpe.py --factored_corpus $FACT_SRC --bpe_corpus $DATA/$TRAIN_PREFIX.tok.nofact.bpe.$SRC_LANG --output_file $DATA/$TRAIN_PREFIX.tok.cfact.bpe.$SRC_LANG
+    TRAIN_FACT_SRC=$DATA/$TRAIN_PREFIX.tok.cfact.bpe.$SRC_LANG
+fi
+if [ "$USE_TARGET_POS_FACTORS" = true ] || [ "$USE_TARGET_CAP_FACTORS" = true ] ; then
+    python $SCRIPTS/transfer_factors_to_bpe.py --factored_corpus $FACT_TGT --bpe_corpus $DATA/$TRAIN_PREFIX.tok.nofact.bpe.$TGT_LANG --output_file $DATA/$TRAIN_PREFIX.tok.cfact.bpe.$TGT_LANG
+    TRAIN_FACT_TGT=$DATA/$TRAIN_PREFIX.tok.cfact.bpe.$TGT_LANG
+fi
 
+ln -s $TRAIN_FACT_SRC $DATA/TRAIN_PREFIX.prep.bpe.$SRC_LANG
+ln -s $TRAIN_FACT_TGT $DATA/TRAIN_PREFIX.prep.bpe.$TGT_LANG
 
 # Create regular joint vocab
 echo "Creating vocab..."
 cat $DATA/$TRAIN_PREFIX.tok.nofact.bpe.$SRC_LANG $DATA/$TRAIN_PREFIX.tok.nofact.bpe.$TGT_LANG | $MARIAN/marian-vocab > $DATA/vocab.$SRC_LANG$TGT_LANG.yml
-
 
 # Create factored vocab
 echo "Creating factored vocab..."
