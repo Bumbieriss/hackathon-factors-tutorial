@@ -32,21 +32,21 @@ done
 
 # Preprocess training data
 echo "Preprocessing train data..."
-$SCRIPTS/$EXPERIMENT/preprocess_train.sh
+$SCRIPTS/preprocess_train.sh
 
 
 # Preprocess valid data
 echo "Preprocessing valid data..."
-$SCRIPTS/$EXPERIMENT/preprocess_test.sh -p $VALID_PREFIX
+$SCRIPTS/preprocess_test.sh -p $VALID_PREFIX
 
 
 # Train Model
-$SCRIPTS/$EXPERIMENT/train_model.sh
+$SCRIPTS/train_model.sh
 
 
 # Preprocess test data
 echo "Preprocessing test data..."
-$SCRIPTS/$EXPERIMENT/preprocess_test.sh -p $TEST_PREFIX
+$SCRIPTS/preprocess_test.sh -p $TEST_PREFIX
 
 
 # Translate test data
@@ -55,12 +55,12 @@ $SCRIPTS/translate.sh
 
 # Postprocessing test data
 echo "Postprocessing test data..."
-$SCRIPTS/$EXPERIMENT/postprocess.sh -p $TEST_PREFIX
+$SCRIPTS/postprocess.sh -p $TEST_PREFIX
 
 
 # Evaluate test data
 echo "Evaluating test data..."
-$SCRIPTS/$EXPERIMENT/evaluate_bleu.sh -p $TEST_PREFIX
+$SCRIPTS/evaluate_bleu.sh -p $TEST_PREFIX
 
 
 # exit success
