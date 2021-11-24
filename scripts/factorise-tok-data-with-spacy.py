@@ -7,7 +7,7 @@ from spacy.tokenizer import Tokenizer
 
 lang = sys.argv[1]
 fin = sys.argv[2]
- = sys.argv[3]
+factor_prefix = sys.argv[3]
 model_dict = {"en": "en_core_web_sm",
               "da": "da_core_news_sm",
               "de": "de_core_news_sm",

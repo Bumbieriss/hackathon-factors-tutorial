@@ -5,7 +5,7 @@ set -e
 
 
 # source env variables
-source "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../../.env
+source "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../.env
 
 
 # Tokenize
@@ -17,8 +17,12 @@ TOK_TGT=$DATA/$TRAIN_PREFIX.tok.$TGT_LANG
 FACT_SRC=$DATA/$TRAIN_PREFIX.tok.$SRC_LANG
 FACT_TGT=$DATA/$TRAIN_PREFIX.tok.$TGT_LANG
 
+sed -i $FACT_TGT -e 's/#/\&htg;/g' -e 's/:/\&cln;/g' -e 's/_/\&usc;/g' -e 's/|/\&ppe;/g' -e 's/\\/\&esc;/g'
+
 # Add factors denoting POS information
 if [ "$USE_SOURCE_POS_FACTORS" = true ] ; then
+    echo "Escaping special characters before POS-tagging"
+    sed -i $DATA/$TRAIN_PREFIX.tok.$SRC_LANG -e 's/|/¦/g'
     echo "Adding POS factors to source"
     SpacyTagger=( "en" "de" "fr" "pl" "da" "el" "nb" "nl" "pt" "ro" "it" "es" )
     if [[ " ${SpacyTagger[@]} " =~ " ${SRC_LANG} " ]] ; then
@@ -30,6 +34,8 @@ if [ "$USE_SOURCE_POS_FACTORS" = true ] ; then
     FACT_SRC=$DATA/$TRAIN_PREFIX.tok.pfact.$SRC_LANG
 fi
 if [ "$USE_TARGET_POS_FACTORS" = true ] ; then
+    echo "Escaping special characters before POS-tagging"
+    sed -i $DATA/$TRAIN_PREFIX.tok.$TGT_LANG -e 's/|/¦/g'
     echo "Adding POS factors to target"
     SpacyTagger=( "en" "de" "fr" "pl" "da" "el" "nb" "nl" "pt" "ro" "it" "es" )
     if [[ " ${SpacyTagger[@]} " =~ " ${SRC_LANG} " ]] ; then
@@ -43,8 +49,8 @@ fi
 
 # Escape special characters so that we can use factors in marian
 echo "Escaping special characters..."
-sed -i $FACT_SRC -e 's/#/\&htg;/g' -e 's/:/\&cln;/g' -e 's/_/\&usc;/g' -e 's/|/\&ppe;/g' -e 's/\\/\&esc;/g'
-sed -i $FACT_TGT -e 's/#/\&htg;/g' -e 's/:/\&cln;/g' -e 's/_/\&usc;/g' -e 's/|/\&ppe;/g' -e 's/\\/\&esc;/g'
+sed -i $FACT_SRC -e 's/#/\&htg;/g' -e 's/:/\&cln;/g' -e 's/_/\&usc;/g' -e 's/\\/\&esc;/g'
+sed -i $FACT_TGT -e 's/#/\&htg;/g' -e 's/:/\&cln;/g' -e 's/_/\&usc;/g' -e 's/\\/\&esc;/g'
 
 
 # Add factors denoting capitalization information

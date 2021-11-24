@@ -43,7 +43,7 @@ def annotate_capitalization(sentence, factor_prefix):
             factor_number=2
         else:
             factor_number=3
-        token_factors[0] = token.lower()
+        token_factors[0] = surface_form.lower()
         token_factors.append(f"{factor_prefix}{factor_number}")
         tokens_out.append("|".join(token_factors))
     return " ".join(tokens_out)
